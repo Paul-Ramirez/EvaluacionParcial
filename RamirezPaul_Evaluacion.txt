@@ -1,0 +1,260 @@
+Ejercicio 1
+/*
+ * Ejercicio 1
+ * Autor: Rmirez Paul
+ */
+int inicio=1;
+volatile int dato;
+int dato2;
+int on;
+int cont;
+int i;
+int j;
+int pesocol,pesoarg,franco,dolar,real;
+void setup() {
+  Serial.begin(9600);
+  Serial.println("INICIO");
+  attachInterrupt(0,activacion1,LOW);
+  attachInterrupt(1,activacion2,LOW);
+
+}
+
+void loop() {
+  if(inicio==1){
+    inicio=0;
+    Serial.println("Ingrese valor euro");
+  } 
+
+}
+//int0
+void activacion1(){
+  if(Serial.available()>0){
+      dato=Serial.read();
+      
+    }
+    //realiza la conversion
+ pesocol=dato*4223;
+ Serial.println(String("Peso colombiano: ")+String(pesocol));
+
+ dolar=dato*1.21;
+ Serial.println(String("Dolar: ")+String(dolar));
+ 
+
+ real=dato*6.20;
+ Serial.println(String("Real: ")+String(real));
+ inicio=1;
+}
+//int1
+void activacion2(){
+  if(Serial.available()>0){//verifica el dato
+      dato=Serial.read();
+      
+    }
+    //realiza la conversion
+  pesocol=dato*4223;
+ Serial.println(String("Peso colombiano: ")+String(pesocol));
+
+ franco=dato*1.08;
+ Serial.println(String("Franco: ")+String(franco));
+ 
+
+ pesoarg=dato*99.04;
+ Serial.println(String("Peso Argentino: ")+String(pesoarg));
+
+ 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////7
+
+
+Ejercicio 2
+/*
+ * Ejercicio 2
+ * Autor Ramirez Paul
+ * 
+ */
+ #include<Servo.h>
+ Servo servo1;
+ String dato;
+ int giro;
+ int btn1=5;
+ int btn2=6;
+ int btn3=7;
+ int btn4=8;
+ int btn5=9;
+
+void setup() {
+  pinMode(btn1,INPUT);
+  pinMode(btn2,INPUT);
+  pinMode(btn3,INPUT);
+  pinMode(btn4,INPUT);
+  pinMode(btn5,INPUT);
+  servo1.attach(6);
+  attachInterrupt(0,activacion,LOW);
+  Serial.begin(9600);
+  Serial.println("Ingrese el valor de 0 al 100");
+  
+
+}
+
+void loop() {
+  if(Serial.available()>0){
+    dato=Serial.readString();
+    giro=dato.toInt();
+    
+  }
+  if(giro<100){
+    servo1.write(giro);
+    
+  }else{
+    Serial.println("Dato ingresado erroneo");
+  }
+
+}
+
+void activacion(){
+  
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+Ejercicio 3
+/*
+ * MASTER
+ * AUTOR: RAMIREZ PAUL
+ */
+ #include<Wire.h>
+ #include<LiquidCrystal.h>
+
+int cont=0;
+String salida,salida2;
+String dato2;
+char vocales[5];
+char aux;
+
+void setup() {
+  Wire.begin();//indica que es el master
+  Serial.begin(9600);
+  Serial.println("Ingrese mensaje: ");
+  Wire.onReceive(receiveEvent);//evento de recepcion
+
+}
+
+void loop() {
+  if(Serial.available()>0){//verifica el dato en la terminal
+    char dato=Serial.read();//lectura del dato en la terminal
+    Wire.beginTransmission(4);//inicia trnsmison hacia la posicion 4
+    Wire.write(dato);//escribe el dato
+    Wire.endTransmission();//finaliza transmision
+  }
+}
+
+
+
+//metodo de envio
+void receiveEvent(int bytes){//evento de recepcion
+  while(Wire.available()){//determina si hay bytes para leer
+    char dato=Wire.read();//lee el dato
+    switch(dato){//impresion de las vocales<
+      case 'a':
+      salida=salida+"a";
+      break;
+      case 'e':
+      salida=salida+"e";
+      break;
+      case 'i':
+      salida=salida+"i";
+      break;
+      case 'o':
+      salida=salida+"o";
+      break;
+      case 'u':
+      salida=salida+"u";
+      break;  
+    }
+    
+  }
+  Serial.println(salida);//se imprime la codificacion
+  Wire.requestFrom(4,4);//recupera informacion desde el esclavo
+  if(Serial.available()>0){//verifica el dato en la terminal
+    salida2=Serial.read();//se lee el dato en la terminal
+  }
+  
+  
+}
+
+///////////
+/*
+ *Esclavo
+ *Autor: Ramirez Paul 
+ *
+*/
+
+#include <Wire.h>
+String salida;
+String salida2;
+String dato2;
+char vocales[5];
+char aux;
+
+void setup() {
+  Wire.begin(4);//indica que es el escalvo y se le da la posicion 4
+  Serial.begin(9600);//inicializa comunicacion serial
+  Wire.onReceive(receiveEvent);//recibir transmision de datos
+  Wire.onRequest(requestEvent);//mensaje de respuesta
+  
+
+}
+
+void loop() {
+  delay(1000);
+}
+
+
+void receiveEvent(int bytes){//recibir transmision de datos
+  //mientras haya bytes para ser leidos
+  while(Wire.available()){
+    char dato=Wire.read();//dato que se lee de la transmion
+    switch(dato){//codificacion de los bytes ingresados
+      case 'a':
+      salida=salida+"a";
+      break;
+      case 'e':
+      salida=salida+"e";
+      break;
+      case 'i':
+      salida=salida+"i";
+      break;
+      case 'o':
+      salida=salida+"o";
+      break;
+      case 'u':
+      salida=salida+"u";
+      break;
+      
+    
+    }
+    
+  }
+  //impresion por comunicacion serial
+  Serial.println(salida);
+  if(Serial.available()>0){//verifica si hay dato en la terminal
+    salida2=Serial.read();//lee el dato en la termianal
+  }
+  
+}
+
+void requestEvent(){//evento de respuesta a la comunicacion
+  //si existe algun dato en la terminal virtual
+  if(Serial.available()>0){//verifica la informacion en la terminal
+    char dato2=Serial.read();//lee el dato requerido
+    Wire.beginTransmission(4);//inicia transmision con posicion 4
+    Wire.write(dato2);//escribe el dato a enviar
+    Wire.endTransmission();//finalizar transmision
+    
+  }
+  for(int i=0;i<4;i++){
+    dato2=vocales[i];
+  }
+  Serial.println(dato2);
+}
